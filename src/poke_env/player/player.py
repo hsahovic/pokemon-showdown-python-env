@@ -264,9 +264,9 @@ class Player(ABC):
         :type split_message: str
         """
         # Battle messages can be multiline
-        will_move = False
-        from_teampreview_request = False
-        maybe_default_order = False
+        should_process_request = False
+        is_from_teampreview = False
+        should_maybe_default = False
         if (
             len(split_messages) > 1
             and len(split_messages[1]) > 1
@@ -289,7 +289,7 @@ class Player(ABC):
                     request = orjson.loads(split_message[2])
                     battle.parse_request(request)
                     if battle.move_on_next_request:
-                        will_move = True
+                        should_process_request = True
                         battle.move_on_next_request = False
             elif split_message[1] == "win" or split_message[1] == "tie":
                 if split_message[1] == "win":
@@ -309,7 +309,7 @@ class Player(ABC):
                     "[Invalid choice] Sorry, too late to make a different move"
                 ):
                     if battle.trapped:
-                        will_move = True
+                        should_process_request = True
                 elif split_message[2].startswith(
                     "[Unavailable choice] Can't switch: The active Pokémon is "
                     "trapped"
@@ -317,45 +317,45 @@ class Player(ABC):
                     "[Invalid choice] Can't switch: The active Pokémon is trapped"
                 ):
                     battle.trapped = True
-                    will_move = True
+                    should_process_request = True
                 elif split_message[2].startswith(
                     "[Invalid choice] Can't switch: You can't switch to an active "
                     "Pokémon"
                 ):
-                    will_move = True
-                    maybe_default_order = True
+                    should_process_request = True
+                    should_maybe_default = True
                 elif split_message[2].startswith(
                     "[Invalid choice] Can't switch: You can't switch to a fainted "
                     "Pokémon"
                 ):
-                    will_move = True
-                    maybe_default_order = True
+                    should_process_request = True
+                    should_maybe_default = True
                 elif split_message[2].startswith(
                     "[Invalid choice] Can't move: Invalid target for"
                 ):
-                    will_move = True
-                    maybe_default_order = True
+                    should_process_request = True
+                    should_maybe_default = True
                 elif split_message[2].startswith(
                     "[Invalid choice] Can't move: You can't choose a target for"
                 ):
-                    will_move = True
-                    maybe_default_order = True
+                    should_process_request = True
+                    should_maybe_default = True
                 elif split_message[2].startswith(
                     "[Invalid choice] Can't move: "
                 ) and split_message[2].endswith("needs a target"):
-                    will_move = True
-                    maybe_default_order = True
+                    should_process_request = True
+                    should_maybe_default = True
                 elif (
                     split_message[2].startswith("[Invalid choice] Can't move: Your")
                     and " doesn't have a move matching " in split_message[2]
                 ):
-                    will_move = True
-                    maybe_default_order = True
+                    should_process_request = True
+                    should_maybe_default = True
                 elif split_message[2].startswith(
                     "[Invalid choice] Incomplete choice: "
                 ):
-                    will_move = True
-                    maybe_default_order = True
+                    should_process_request = True
+                    should_maybe_default = True
                 elif split_message[2].startswith(
                     "[Unavailable choice]"
                 ) and split_message[2].endswith("is disabled"):
@@ -368,33 +368,33 @@ class Player(ABC):
                     "[Invalid choice] Can't move: You sent more choices than unfainted"
                     " Pokémon."
                 ):
-                    will_move = True
-                    maybe_default_order = True
+                    should_process_request = True
+                    should_maybe_default = True
                 elif split_message[2].startswith(
                     "[Invalid choice] Can't move: You can only Terastallize once per battle."
                 ):
-                    will_move = True
-                    maybe_default_order = True
+                    should_process_request = True
+                    should_maybe_default = True
                 else:
                     self.logger.critical("Unexpected error message: %s", split_message)
             elif split_message[1] == "turn":
                 battle.parse_message(split_message)
-                will_move = True
+                should_process_request = True
             elif split_message[1] == "teampreview":
                 battle.parse_message(split_message)
-                will_move = True
-                from_teampreview_request = True
+                should_process_request = True
+                is_from_teampreview = True
             elif split_message[1] == "bigerror":
                 self.logger.warning("Received 'bigerror' message: %s", split_message)
             elif split_message[1] == "uhtml" and split_message[2] == "otsrequest":
                 await self._handle_ots_request(battle.battle_tag)
             else:
                 battle.parse_message(split_message)
-        if will_move:
+        if should_process_request:
             await self._handle_battle_request(
                 battle,
-                from_teampreview_request=from_teampreview_request,
-                maybe_default_order=maybe_default_order,
+                from_teampreview_request=is_from_teampreview,
+                maybe_default_order=should_maybe_default,
             )
 
     async def _handle_battle_request(
