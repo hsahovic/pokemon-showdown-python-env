@@ -3,7 +3,7 @@ import unittest
 from inspect import isawaitable
 from unittest.mock import patch
 
-from gymnasium.spaces import Discrete, Space
+from gymnasium.spaces import Discrete
 
 from poke_env import AccountConfiguration, ServerConfiguration
 from poke_env.environment import AbstractBattle, Battle, Move, Pokemon, Status
@@ -30,9 +30,6 @@ class CustomEnvPlayer(EnvPlayer):
 
     def action_to_move(self, action: int, battle: AbstractBattle) -> BattleOrder:
         return Gen7EnvSinglePlayer.action_to_move(self, action, battle)
-
-    def describe_embedding(self) -> Space:
-        pass
 
     _ACTION_SPACE = Gen7EnvSinglePlayer._ACTION_SPACE
 
@@ -250,9 +247,6 @@ def test_action_space():
             def calc_reward(self, last_battle, current_battle):
                 return 0.0
 
-            def describe_embedding(self):
-                return None
-
         p = CustomEnvClass(start_listening=False, start_challenging=False)
 
         assert p.action_space(p.possible_agents[0]) == Discrete(
@@ -290,9 +284,6 @@ def test_action_to_move(z_moves_mock):
 
             def calc_reward(self, last_battle, current_battle):
                 return 0.0
-
-            def describe_embedding(self):
-                return None
 
             def get_opponent(self):
                 return None

@@ -2,7 +2,6 @@ import asyncio
 import sys
 from io import StringIO
 
-from gymnasium import Space
 from pettingzoo.utils.env import ActionType, ObsType
 
 from poke_env.environment import AbstractBattle, Battle, Pokemon
@@ -12,7 +11,6 @@ from poke_env.player.gymnasium_api import _AsyncPlayer, _AsyncQueue
 
 class DummyEnv(GymnasiumEnv[ObsType, ActionType]):
     def __init__(self, *args, **kwargs):
-        self.opponent = None
         super().__init__(*args, **kwargs)
 
     def calc_reward(
@@ -25,9 +23,6 @@ class DummyEnv(GymnasiumEnv[ObsType, ActionType]):
 
     def embed_battle(self, battle: AbstractBattle) -> ObsType:
         return [0, 1, 2]
-
-    def describe_embedding(self) -> Space:
-        return "Space"
 
     def action_space_size(self) -> int:
         return 1
